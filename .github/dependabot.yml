@@ -9,9 +9,9 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "Astro"
+      - "novasuitelabs"
     assignees:
-      - "Astro"
+      - "novasuitelabs"
     commit-message:
       prefix: "deps"
       prefix-development: "deps-dev"
