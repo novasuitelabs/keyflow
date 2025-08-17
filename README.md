@@ -292,6 +292,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ by the KeyFlow Team**
+**Made with ❤️ by Nova Suite Labs**
 
 *Keep your passwords secure, keep them local, keep them with KeyFlow.*
