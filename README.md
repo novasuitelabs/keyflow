@@ -1,7 +1,7 @@
 # KeyFlow 🔐
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](https://github.com/novasuitelabs/keyflow/releases)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/novasuitelabs/keyflow/releases)
 [![Build Status](https://github.com/novasuitelabs/keyflow/workflows/CI/badge.svg)](https://github.com/novasuitelabs/keyflow/actions)
 [![Security](https://img.shields.io/badge/security-audited-green.svg)](SECURITY.md)
 
@@ -20,18 +20,70 @@
 
 ## 🚀 Quick Start
 
-### Installation
+Choose the installation method that works best for you:
 
-1. **Download the Extension**
-   - Download the latest release from [GitHub Releases](https://github.com/novasuitelabs/keyflow/releases)
-   - Or build from source (see Development section)
+### Option 1: Install from Chrome Web Store (Recommended for Most Users)
 
-2. **Install in Your Browser**
-   - **Chrome**: Go to `chrome://extensions/`, enable "Developer mode", click "Load unpacked", select the extension folder
-   - **Firefox**: Go to `about:addons`, click the gear icon, select "Debug Add-ons", click "Load Temporary Add-on", select `manifest.json`
-   - **Edge**: Go to `edge://extensions/`, enable "Developer mode", click "Load unpacked", select the extension folder
+**Easiest method - One-click installation with automatic updates**
+
+1. **Visit the Chrome Web Store**
+   - Go to [KeyFlow on Chrome Web Store](https://chrome.google.com/webstore/detail/keyflow/your-extension-id)
+   - Click "Add to Chrome" button
+
+2. **Confirm Installation**
+   - Click "Add extension" in the confirmation dialog
+   - KeyFlow will be automatically installed and updated
 
 3. **Set Up Your Master Password**
+   - Click the KeyFlow icon in your browser toolbar
+   - Create a strong master password
+   - Start adding your passwords!
+
+### Option 2: Install from GitHub Releases
+
+**For users who want the latest version directly from GitHub**
+
+1. **Download the Extension**
+   - Go to [GitHub Releases](https://github.com/novasuitelabs/keyflow/releases)
+   - Download the latest release ZIP file for your browser
+   - Extract the ZIP file to a folder on your computer
+
+2. **Install in Your Browser**
+   - **Chrome**: Go to `chrome://extensions/`, enable "Developer mode", click "Load unpacked", select the extracted folder
+   - **Firefox**: Go to `about:addons`, click the gear icon, select "Debug Add-ons", click "Load Temporary Add-on", select `manifest.json` from the extracted folder
+   - **Edge**: Go to `edge://extensions/`, enable "Developer mode", click "Load unpacked", select the extracted folder
+
+3. **Set Up Your Master Password**
+   - Click the KeyFlow icon in your browser toolbar
+   - Create a strong master password
+   - Start adding your passwords!
+
+### Option 3: Build from Source
+
+**For developers and users who want the latest development version**
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/novasuitelabs/keyflow.git
+   cd keyflow
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Build the Extension**
+   ```bash
+   npm run build:extension
+   ```
+
+4. **Install in Your Browser**
+   - **Chrome**: Go to `chrome://extensions/`, enable "Developer mode", click "Load unpacked", select the `dist` folder
+   - **Firefox**: Go to `about:addons`, click the gear icon, select "Debug Add-ons", click "Load Temporary Add-on", select `manifest.json` from the `dist` folder
+   - **Edge**: Go to `edge://extensions/`, enable "Developer mode", click "Load unpacked", select the `dist` folder
+
+5. **Set Up Your Master Password**
    - Click the KeyFlow icon in your browser toolbar
    - Create a strong master password
    - Start adding your passwords!
@@ -109,7 +161,7 @@ KeyFlow prioritizes your security with multiple layers of protection:
 
 5. **Load in Browser**
    - Follow the installation instructions above
-   - Select the `public` folder as the extension directory
+   - Select the `dist` folder as the extension directory
 
 ### Development Scripts
 
@@ -117,9 +169,33 @@ KeyFlow prioritizes your security with multiple layers of protection:
 npm run dev          # Start development server
 npm run build        # Build for production
 npm run build:extension # Build extension files
+npm run build:store  # Build extension and create Chrome Web Store ZIP
 npm run lint         # Run ESLint
 npm run preview      # Preview production build
 ```
+
+### Building for Production
+
+When building your extension for production/distribution, you have two options:
+
+#### Option 1: Using Build Script (Recommended)
+```bash
+npm run build:extension
+```
+- This builds the extension and copies files to the `public` folder
+- Use the `public` folder for distribution or Chrome Web Store submission
+
+#### Option 2: Using Chrome's Pack Extension
+```bash
+npm run build:extension
+```
+- Then go to `chrome://extensions/`
+- Enable "Developer mode"
+- Click "Pack extension"
+- Select the `dist` folder
+- This creates a `.crx` file for distribution
+
+**Note**: Both methods work for Chrome Web Store submission - the store accepts both `.zip` (from Option 1) and `.crx` (from Option 2) formats.
 
 ### Project Structure
 
@@ -209,7 +285,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📊 Project Status
 
-- **Version**: 1.0.1
+- **Version**: 1.0.0
 - **Status**: Stable
 - **Browser Support**: Chrome 88+, Firefox 85+, Edge 88+
 - **License**: MIT

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "KeyFlow",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Open-source password manager for secure, local password storage",
   
   "permissions": [

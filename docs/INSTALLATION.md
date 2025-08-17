@@ -12,7 +12,7 @@ This guide will walk you through installing KeyFlow on your preferred browser.
 ### Method 1: Install from GitHub Releases (Recommended)
 
 1. **Download the Extension**
-   - Go to [KeyFlow Releases](https://github.com/your-username/keyflow/releases)
+   - Go to [KeyFlow Releases](https://github.com/novasuitelabs/keyflow/releases)
    - Download the latest release ZIP file
    - Extract the ZIP file to a permanent location on your computer
 
@@ -25,7 +25,7 @@ If you prefer to build from source or want the latest development version:
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/your-username/keyflow.git
+   git clone https://github.com/novasuitelabs/keyflow.git
    cd keyflow
    ```
 

@@ -1,12 +1,13 @@
 {
   "name": "keyflow",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "build:extension": "vite build && copy dist\\popup.css public\\ && copy dist\\popup.js public\\ && copy dist\\background.js public\\ && copy dist\\content.js public\\",
+    "build:store": "npm run build:extension && powershell -Command \"Import-Module Microsoft.PowerShell.Archive; Compress-Archive -Path dist\\* -DestinationPath keyflow-distribution.zip -Force\"",
     "lint": "eslint .",
     "preview": "vite preview"
   },

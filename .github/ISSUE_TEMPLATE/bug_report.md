@@ -25,7 +25,7 @@ If applicable, add screenshots to help explain your problem.
 **Environment (please complete the following information):**
  - OS: [e.g. Windows 10, macOS 12.0, Ubuntu 20.04]
  - Browser: [e.g. Chrome 120, Firefox 115, Edge 120]
- - KeyFlow Version: [e.g. 1.0.1]
+ - KeyFlow Version: [e.g. 1.0.0]
  - Node.js Version: [e.g. 18.0.0]
 
 **Additional context**

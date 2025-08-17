@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - N/A
 
-## [1.0.1] - 2024-01-XX
+## [1.0.0] - 2024-01-XX
 
 ### Added
 - Initial release of KeyFlow password manager
@@ -48,21 +48,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zero-knowledge architecture - no data sent to external servers
 - Secure random number generation for password creation
 
-## [1.0.0] - 2024-01-XX
-
-### Added
-- Initial beta release
-- Core password management functionality
-- Basic encryption implementation
-- Simple popup interface
-
 ---
 
 ## Version History
 
 ### Version 1.0.x
-- **1.0.1**: First stable release with full feature set
-- **1.0.0**: Initial beta release
+- **1.0.0**: First stable release with full feature set
 
 ### Planned Features
 - **1.1.0**: Enhanced security features
@@ -74,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Migration Guide
 
-### From 1.0.0 to 1.0.1
+### From 0.9.0 to 1.0.0
 - No migration required
 - All data formats remain compatible
 - Automatic upgrade process
@@ -83,7 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Release Notes
 
-### Version 1.0.1
+### Version 1.0.0
 This is the first stable release of KeyFlow, featuring a complete password management solution with enterprise-grade security.
 
 **Key Features:**
@@ -136,7 +127,7 @@ When adding entries to this changelog, please follow these guidelines:
 
 ## Links
 
-- [GitHub Repository](https://github.com/your-username/keyflow)
-- [Issue Tracker](https://github.com/your-username/keyflow/issues)
-- [Release Downloads](https://github.com/your-username/keyflow/releases)
-- [Documentation](https://github.com/your-username/keyflow/docs)
+- [GitHub Repository](https://github.com/novasuitelabs/keyflow)
+- [Issue Tracker](https://github.com/novasuitelabs/keyflow/issues)
+- [Release Downloads](https://github.com/novasuitelabs/keyflow/releases)
+- [Documentation](https://github.com/novasuitelabs/keyflow/docs)
