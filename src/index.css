@@ -640,7 +640,24 @@ body {
 .password-display {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
+}
+
+.password-display-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.delete-button {
+  color: #ef4444;
+  transition: all 0.2s;
+}
+
+.delete-button:hover {
+  color: #dc2626;
+  background-color: #fee2e2;
 }
 
 .password-field {
