@@ -9,13 +9,21 @@
 
 ## ✨ Features
 
-- 🔐 **Local Encryption** - All passwords encrypted locally, never sent to servers
-- 🔑 **Strong Password Generation** - Generate secure passwords with customizable options
-- 🚀 **Auto-Fill** - Automatically fill login forms with saved credentials
-- 🔍 **Search & Filter** - Quickly find passwords with powerful search capabilities
+- 🔐 **Military-Grade Encryption** - AES-256-GCM encryption with PBKDF2 key derivation (100,000 iterations)
+- 🔑 **Advanced Password Generator** - Random, pronounceable, and passphrase options
+- 🚀 **Smart Auto-Fill** - Automatically detect and fill login forms across websites
+- ✏️ **Full CRUD Operations** - Create, read, update, and delete passwords with ease
+- 🔍 **Powerful Search** - Fuzzy search with sorting by name, date, or last used
+- ⭐ **Favorites & Recent** - Quick access to frequently used passwords
+- 🛡️ **Security Dashboard** - Monitor password health, duplicates, and weak passwords
+- 📊 **Password Analysis** - Identify old, weak, or reused passwords
+- 📤 **Import/Export** - Backup and restore your vault with secure verification
+- ⏰ **Auto-Lock Timer** - Configurable vault auto-lock with warnings
+- 🌙 **Dark Mode** - Easy on the eyes for night-time use
+- ⌨️ **Keyboard Shortcuts** - Efficient navigation with hotkeys
 - 🎨 **Modern UI** - Clean, intuitive interface built with React
 - 🌐 **Cross-Browser** - Works on Chrome, Firefox, and Edge
-- 🔒 **Zero-Knowledge** - Your data stays on your device
+- 🔒 **Zero-Knowledge** - Your data never leaves your device
 - 📱 **Responsive Design** - Works great on all screen sizes
 
 ## 🚀 Quick Start
@@ -75,13 +83,14 @@ Choose the installation method that works best for you:
 
 3. **Build the Extension**
    ```bash
-   npm run build:extension
+   npm run build
    ```
+   This will build the extension and copy all files to the `public` folder.
 
 4. **Install in Your Browser**
-   - **Chrome**: Go to `chrome://extensions/`, enable "Developer mode", click "Load unpacked", select the `dist` folder
-   - **Firefox**: Go to `about:addons`, click the gear icon, select "Debug Add-ons", click "Load Temporary Add-on", select `manifest.json` from the `dist` folder
-   - **Edge**: Go to `edge://extensions/`, enable "Developer mode", click "Load unpacked", select the `dist` folder
+   - **Chrome**: Go to `chrome://extensions/`, enable "Developer mode", click "Load unpacked", select the `public` folder
+   - **Firefox**: Go to `about:addons`, click the gear icon, select "Debug Add-ons", click "Load Temporary Add-on", select `manifest.json` from the `public` folder
+   - **Edge**: Go to `edge://extensions/`, enable "Developer mode", click "Load unpacked", select the `public` folder
 
 5. **Set Up Your Master Password**
    - Click the KeyFlow icon in your browser toolbar
@@ -110,10 +119,12 @@ Choose the installation method that works best for you:
 KeyFlow prioritizes your security with multiple layers of protection:
 
 ### Data Protection
-- **Local Storage**: All data stored locally in your browser
-- **Strong Encryption**: AES-256 encryption for all sensitive data
-- **Zero-Knowledge**: No data ever leaves your device
-- **Secure Random**: Cryptographically secure random number generation
+- **Local Storage**: All data stored locally in your browser using Chrome's secure storage API
+- **AES-256-GCM Encryption**: Industry-standard authenticated encryption for all passwords
+- **PBKDF2 Key Derivation**: 100,000 iterations for secure master password hashing
+- **Zero-Knowledge Architecture**: No data ever leaves your device - not even encrypted
+- **Secure Random**: Cryptographically secure random number generation (Web Crypto API)
+- **Memory Protection**: Master password kept in memory only while vault is unlocked
 
 ### Privacy Features
 - **No Tracking**: No analytics or tracking code
@@ -166,13 +177,24 @@ KeyFlow prioritizes your security with multiple layers of protection:
 ### Development Scripts
 
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run build:extension # Build extension files
-npm run build:store  # Build extension and create Chrome Web Store ZIP
-npm run lint         # Run ESLint
-npm run preview      # Preview production build
+npm run dev              # Start development server
+npm run build            # Build extension with post-build processing
+npm run build:extension  # Alias for npm run build
+npm run build:store      # Build and package for Chrome Web Store
+npm run lint             # Run ESLint
+npm run preview          # Preview production build
 ```
+
+### Keyboard Shortcuts
+
+KeyFlow includes powerful keyboard shortcuts for efficiency:
+
+- **`Ctrl+K` / `Cmd+K`** - Focus search box
+- **`Ctrl+N` / `Cmd+N`** - Add new password (when unlocked)
+- **`Esc`** - Close modals and forms
+- **`Enter`** - Copy password (when focused on password field)
+
+These shortcuts work throughout the extension popup for faster navigation.
 
 ### Building for Production
 

@@ -4,42 +4,102 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
 
 jobs:
   release:
+    name: Create Release
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
         cache: 'npm'
-    
+
     - name: Install dependencies
       run: npm ci
-    
+
     - name: Build extension
-      run: npm run build:extension
-    
-    - name: Create Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: npm run build
+
+    - name: Verify build
+      run: |
+        echo "Verifying build output..."
+        ls -la public/
+        test -f public/manifest.json
+        test -f public/popup.js
+        test -f public/background.js
+        test -f public/content.js
+        echo "✅ Build verified"
+
+    - name: Get version from tag
+      id: get_version
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Create ZIP archive
+      run: |
+        cd public
+        zip -r ../keyflow-${{ steps.get_version.outputs.version }}.zip .
+        cd ..
+        echo "Created keyflow-${{ steps.get_version.outputs.version }}.zip"
+        ls -lh keyflow-${{ steps.get_version.outputs.version }}.zip
+
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        if [ -f CHANGELOG.md ]; then
+          echo "## 📦 KeyFlow ${{ steps.get_version.outputs.version }}" > release_notes.md
+          echo "" >> release_notes.md
+          echo "### Installation" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "1. Download \`keyflow-${{ steps.get_version.outputs.version }}.zip\`" >> release_notes.md
+          echo "2. Extract the ZIP file" >> release_notes.md
+          echo "3. Open Chrome and go to \`chrome://extensions/\`" >> release_notes.md
+          echo "4. Enable **Developer mode**" >> release_notes.md
+          echo "5. Click **Load unpacked** and select the extracted folder" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "### What's Changed" >> release_notes.md
+          echo "" >> release_notes.md
+          awk '/^## \['"${GITHUB_REF#refs/tags/v}"'\]/,/^## \[/{if(/^## \['"${GITHUB_REF#refs/tags/v}"'\]/)p=1;if(/^## \[/ && !/^## \['"${GITHUB_REF#refs/tags/v}"'\]/)exit;if(p)print}' CHANGELOG.md >> release_notes.md || echo "See CHANGELOG.md for details." >> release_notes.md
+        else
+          echo "## 📦 KeyFlow ${{ steps.get_version.outputs.version }}" > release_notes.md
+          echo "" >> release_notes.md
+          echo "Chrome extension release. See repository for installation instructions." >> release_notes.md
+        fi
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        name: KeyFlow ${{ steps.get_version.outputs.version }}
+        body_path: release_notes.md
+        files: |
+          keyflow-${{ steps.get_version.outputs.version }}.zip
         draft: false
         prerelease: false
-    
-    - name: Upload Extension Files
-      uses: actions/upload-release-asset@v1
+        generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload Chrome Web Store Package
+      uses: actions/upload-artifact@v4
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./public/
-        asset_name: keyflow-extension-${{ github.ref_name }}.zip
-        asset_content_type: application/zip
+        name: chrome-web-store-package
+        path: keyflow-${{ steps.get_version.outputs.version }}.zip
+        retention-days: 90

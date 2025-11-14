@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Plus, Eye, EyeOff, Copy, Settings, Search } from 'lucide-react';
+import { Lock, Plus, Eye, EyeOff, Copy, Settings, Search, Edit2, Trash2 } from 'lucide-react';
 import { keyflowCrypto, keyflowStorage } from '../utils/crypto.js';
 
 const KeyFlowPopup = () => {
   const [isLocked, setIsLocked] = useState(true);
   const [masterPassword, setMasterPassword] = useState('');
+  const [currentMasterPassword, setCurrentMasterPassword] = useState(''); // Store decrypted password in memory
   const [passwords, setPasswords] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingPassword, setEditingPassword] = useState(null); // For edit functionality
   const [newPassword, setNewPassword] = useState({
     site: '',
     username: '',
@@ -24,6 +26,8 @@ const KeyFlowPopup = () => {
   const [lockTimer, setLockTimer] = useState(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [showLockWarning, setShowLockWarning] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Setup and onboarding states
   const [isFirstTime, setIsFirstTime] = useState(true);
@@ -75,13 +79,6 @@ const KeyFlowPopup = () => {
   // Auto-lock settings (in minutes)
   const AUTO_LOCK_TIME = 5; // 5 minutes
   const WARNING_TIME = 30; // 30 seconds warning
-
-  // Mock data for development
-  const mockPasswords = [
-    { id: 1, site: 'GitHub', username: 'user@example.com', password: 'SecurePass123!', url: 'https://github.com' },
-    { id: 2, site: 'Gmail', username: 'myemail@gmail.com', password: 'AnotherPass456@', url: 'https://gmail.com' },
-    { id: 3, site: 'Twitter', username: 'myhandle', password: 'TwitterPass789#', url: 'https://twitter.com' }
-  ];
 
   // Check vault status on component mount
   useEffect(() => {
@@ -183,9 +180,9 @@ const KeyFlowPopup = () => {
   // Check if this is the first time using KeyFlow
   const checkInitialSetup = async () => {
     try {
-      const result = await chrome.storage.local.get(['keyflowSetupComplete', 'autoLockTimer']);
-      
-      if (!result.keyflowSetupComplete) {
+      const vaultExists = await keyflowStorage.vaultExists();
+
+      if (!vaultExists) {
         // First time user - show setup flow
         setIsFirstTime(true);
         setSetupStep(0);
@@ -196,7 +193,7 @@ const KeyFlowPopup = () => {
         checkVaultStatus();
       }
     } catch (error) {
-      console.error('Failed to check setup status:', error);
+      setError('Failed to check vault status');
       setIsFirstTime(true); // Default to setup if error
     }
   };
@@ -336,17 +333,17 @@ const KeyFlowPopup = () => {
   // Auto-lock the vault
   const autoLock = (clearStorage = true) => {
     setIsLocked(true);
+    setCurrentMasterPassword(''); // Clear master password from memory
     setShowPasswords({});
     setShowAddForm(false);
     setSearchTerm('');
+    setEditingPassword(null);
     clearAutoLockTimer();
-    
+
     // Only clear storage when timer actually expires
     if (clearStorage) {
       chrome.storage.local.remove(['autoLockTimer']);
     }
-    
-    console.log('KeyFlow: Vault auto-locked due to inactivity');
   };
 
   // Reset auto-lock timer on user activity
@@ -378,20 +375,27 @@ const KeyFlowPopup = () => {
 
   const completeSetup = async () => {
     try {
-      // Save master password (in production, this would be properly hashed)
-      await chrome.storage.local.set({
-        keyflowSetupComplete: true,
-        masterPasswordHash: btoa(newMasterPassword) // Basic encoding for demo
-      });
-      
+      setLoading(true);
+      setError(null);
+
+      // Initialize vault with proper encryption
+      await keyflowStorage.initializeVault(newMasterPassword);
+
+      // Store master password in memory
+      setCurrentMasterPassword(newMasterPassword);
+
       // Start tour
       setIsFirstTime(false);
       setIsLocked(false);
       setShowTour(true);
       setTourStep(0);
+      setNewMasterPassword('');
+      setConfirmPassword('');
     } catch (error) {
-      console.error('Failed to complete setup:', error);
-      alert('Setup failed. Please try again.');
+      setError('Setup failed. Please try again.');
+      alert('Setup failed: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -509,34 +513,112 @@ const KeyFlowPopup = () => {
     return Math.round(score);
   };
 
+  // Save passwords with encryption
+  const savePasswordsEncrypted = async (updatedPasswords) => {
+    try {
+      if (!currentMasterPassword) {
+        throw new Error('Master password not available');
+      }
+      await keyflowStorage.savePasswords(updatedPasswords, currentMasterPassword);
+      setPasswords(updatedPasswords);
+    } catch (error) {
+      setError('Failed to save passwords');
+      throw error;
+    }
+  };
+
   // Favorites and Recent Functions
   const toggleFavorite = async (passwordId) => {
-    const updatedPasswords = passwords.map(p => 
-      p.id === passwordId ? { ...p, isFavorite: !p.isFavorite } : p
-    );
-    setPasswords(updatedPasswords);
-    await chrome.storage.local.set({ passwords: updatedPasswords });
-    
-    // Update favorites list
-    const newFavorites = updatedPasswords.filter(p => p.isFavorite).map(p => p.id);
-    setFavorites(newFavorites);
+    try {
+      const updatedPasswords = passwords.map(p =>
+        p.id === passwordId ? { ...p, isFavorite: !p.isFavorite } : p
+      );
+      await savePasswordsEncrypted(updatedPasswords);
+
+      // Update favorites list
+      const newFavorites = updatedPasswords.filter(p => p.isFavorite).map(p => p.id);
+      setFavorites(newFavorites);
+    } catch (error) {
+      alert('Failed to update favorite');
+    }
   };
 
   const markAsUsed = async (passwordId) => {
-    const now = new Date().toISOString();
-    const updatedPasswords = passwords.map(p => 
-      p.id === passwordId ? { ...p, lastUsed: now } : p
-    );
-    setPasswords(updatedPasswords);
-    await chrome.storage.local.set({ passwords: updatedPasswords });
-    
-    // Update recent passwords (last 5 used)
-    const recent = updatedPasswords
-      .filter(p => p.lastUsed)
-      .sort((a, b) => new Date(b.lastUsed) - new Date(a.lastUsed))
-      .slice(0, 5)
-      .map(p => p.id);
-    setRecentPasswords(recent);
+    try {
+      const now = new Date().toISOString();
+      const updatedPasswords = passwords.map(p =>
+        p.id === passwordId ? { ...p, lastUsed: now } : p
+      );
+      await savePasswordsEncrypted(updatedPasswords);
+
+      // Update recent passwords (last 5 used)
+      const recent = updatedPasswords
+        .filter(p => p.lastUsed)
+        .sort((a, b) => new Date(b.lastUsed) - new Date(a.lastUsed))
+        .slice(0, 5)
+        .map(p => p.id);
+      setRecentPasswords(recent);
+    } catch (error) {
+      // Silent fail for usage tracking
+    }
+  };
+
+  // Delete password function
+  const deletePassword = async (passwordId) => {
+    try {
+      if (!confirm('Are you sure you want to delete this password?')) {
+        return;
+      }
+
+      const updatedPasswords = passwords.filter(p => p.id !== passwordId);
+      await savePasswordsEncrypted(updatedPasswords);
+      alert('Password deleted successfully');
+    } catch (error) {
+      alert('Failed to delete password');
+    }
+  };
+
+  // Edit password function
+  const startEditPassword = (password) => {
+    setEditingPassword(password.id);
+    setNewPassword({
+      site: password.site || '',
+      username: password.username || '',
+      password: password.password || '',
+      url: password.url || '',
+      notes: password.notes || '',
+      tags: password.tags || [],
+      isFavorite: password.isFavorite || false,
+      lastUsed: password.lastUsed,
+      createdAt: password.createdAt,
+      lastChanged: password.lastChanged
+    });
+    setShowAddForm(true);
+    resetAutoLockTimer();
+  };
+
+  const saveEditedPassword = async () => {
+    try {
+      const updatedPasswords = passwords.map(p =>
+        p.id === editingPassword
+          ? {
+              ...p,
+              ...newPassword,
+              lastChanged: new Date().toISOString()
+            }
+          : p
+      );
+      await savePasswordsEncrypted(updatedPasswords);
+      setShowAddForm(false);
+      setEditingPassword(null);
+      setNewPassword({
+        site: '', username: '', password: '', url: '', notes: '', tags: [],
+        isFavorite: false, lastUsed: null, createdAt: null, lastChanged: null
+      });
+      alert('Password updated successfully');
+    } catch (error) {
+      alert('Failed to update password');
+    }
   };
 
   // Import/Export Functions
@@ -554,11 +636,10 @@ const KeyFlowPopup = () => {
         return;
       }
 
-      // Verify master password
-      const result = await chrome.storage.local.get(['masterPasswordHash']);
-      const hashedInput = btoa(exportPasswordVerification);
-      
-      if (hashedInput !== result.masterPasswordHash) {
+      // Verify master password using crypto
+      const isValid = await keyflowStorage.verifyPassword(exportPasswordVerification);
+
+      if (!isValid) {
         alert('Incorrect master password. Export cancelled.');
         setExportPasswordVerification('');
         setExportConfirmation(false);
@@ -639,12 +720,11 @@ const KeyFlowPopup = () => {
       // Merge passwords (avoid duplicates by ID)
       const existingIds = new Set(passwords.map(p => p.id));
       const newPasswords = importPreview.passwords.filter(p => !existingIds.has(p.id));
-      
+
       const mergedPasswords = [...passwords, ...newPasswords];
-      
-      // Update storage
-      await chrome.storage.local.set({ passwords: mergedPasswords });
-      setPasswords(mergedPasswords);
+
+      // Update storage with encryption
+      await savePasswordsEncrypted(mergedPasswords);
 
       // Import settings if available
       if (importPreview.settings) {
@@ -690,37 +770,52 @@ const KeyFlowPopup = () => {
 
   const loadPasswords = async () => {
     try {
-      const result = await chrome.storage.local.get(['passwords']);
-      setPasswords(result.passwords || []);
+      setLoading(true);
+      setError(null);
+
+      if (!currentMasterPassword) {
+        setPasswords([]);
+        return;
+      }
+
+      // Load and decrypt passwords
+      const decryptedPasswords = await keyflowStorage.loadPasswords(currentMasterPassword);
+      setPasswords(decryptedPasswords || []);
     } catch (error) {
-      console.error('Failed to load passwords:', error);
+      setError('Failed to load passwords');
       setPasswords([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleUnlock = async () => {
     try {
-      // Check stored master password
-      const result = await chrome.storage.local.get(['masterPasswordHash']);
-      const storedHash = result.masterPasswordHash;
-      
-      if (storedHash && btoa(masterPassword) === storedHash) {
-        setIsLocked(false);
-        setMasterPassword('');
+      setLoading(true);
+      setError(null);
+
+      if (!masterPassword) {
+        alert('Please enter your master password');
         return;
       }
 
-      // For demo purposes, also accept 'demo' as password
-      if (masterPassword === 'demo') {
+      // Verify master password using crypto
+      const isValid = await keyflowStorage.verifyPassword(masterPassword);
+
+      if (isValid) {
+        // Store master password in memory for encryption/decryption
+        setCurrentMasterPassword(masterPassword);
         setIsLocked(false);
         setMasterPassword('');
-        return;
+      } else {
+        setError('Invalid master password');
+        alert('Invalid master password');
       }
-
-      alert('Invalid master password');
     } catch (error) {
-      console.error('Unlock failed:', error);
-      alert('Failed to unlock vault');
+      setError('Failed to unlock vault');
+      alert('Failed to unlock vault: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1625,10 +1720,10 @@ const KeyFlowPopup = () => {
         </div>
       )}
 
-      {/* Add Password Form */}
+      {/* Add/Edit Password Form */}
       {showAddForm && (
         <div className="add-form slide-in-down">
-          <h3 className="form-title">Add New Password</h3>
+          <h3 className="form-title">{editingPassword ? 'Edit Password' : 'Add New Password'}</h3>
           <div className="form-grid">
             <input
               type="text"
@@ -1687,34 +1782,45 @@ const KeyFlowPopup = () => {
             <div className="form-actions">
               <button
                 onClick={async () => {
-                  try {
-                    const newPasswordEntry = {
-                      id: Date.now(),
-                      ...newPassword,
-                      createdAt: new Date().toISOString(),
-                      lastChanged: new Date().toISOString()
-                    };
-                    
-                    const updatedPasswords = [...passwords, newPasswordEntry];
-                    await chrome.storage.local.set({ passwords: updatedPasswords });
-                    setPasswords(updatedPasswords);
-                    setShowAddForm(false);
-                    setNewPassword({
-                      site: '', username: '', password: '', url: '', notes: '', tags: [],
-                      isFavorite: false, lastUsed: null, createdAt: null, lastChanged: null
-                    });
-                  } catch (error) {
-                    console.error('Failed to save password:', error);
-                    alert('Failed to save password');
+                  // Use edit function if editing, otherwise add new
+                  if (editingPassword) {
+                    await saveEditedPassword();
+                  } else {
+                    try {
+                      if (!newPassword.site || !newPassword.username || !newPassword.password) {
+                        alert('Please fill in all required fields');
+                        return;
+                      }
+
+                      const newPasswordEntry = {
+                        id: Date.now(),
+                        ...newPassword,
+                        createdAt: new Date().toISOString(),
+                        lastChanged: new Date().toISOString()
+                      };
+
+                      const updatedPasswords = [...passwords, newPasswordEntry];
+                      await savePasswordsEncrypted(updatedPasswords);
+                      setShowAddForm(false);
+                      setNewPassword({
+                        site: '', username: '', password: '', url: '', notes: '', tags: [],
+                        isFavorite: false, lastUsed: null, createdAt: null, lastChanged: null
+                      });
+                      alert('Password saved successfully');
+                    } catch (error) {
+                      alert('Failed to save password: ' + error.message);
+                    }
                   }
                 }}
                 className="save-button"
+                disabled={loading}
               >
-                Save
+                {loading ? 'Saving...' : 'Save'}
               </button>
               <button
                 onClick={() => {
                   setShowAddForm(false);
+                  setEditingPassword(null);
                   setNewPassword({
                     site: '', username: '', password: '', url: '', notes: '', tags: [],
                     isFavorite: false, lastUsed: null, createdAt: null, lastChanged: null
@@ -1784,13 +1890,29 @@ const KeyFlowPopup = () => {
                   <div className="password-field">
                     {showPasswords[password.id] ? password.password : '••••••••••••'}
                   </div>
-                  <button
-                    onClick={() => copyToClipboard(password.password, password.id)}
-                    className="action-button"
-                    title="Copy password"
-                  >
-                    <Copy />
-                  </button>
+                  <div className="password-display-actions">
+                    <button
+                      onClick={() => copyToClipboard(password.password, password.id)}
+                      className="action-button"
+                      title="Copy password"
+                    >
+                      <Copy />
+                    </button>
+                    <button
+                      onClick={() => startEditPassword(password)}
+                      className="action-button"
+                      title="Edit password"
+                    >
+                      <Edit2 />
+                    </button>
+                    <button
+                      onClick={() => deletePassword(password.id)}
+                      className="action-button delete-button"
+                      title="Delete password"
+                    >
+                      <Trash2 />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

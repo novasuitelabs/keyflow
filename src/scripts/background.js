@@ -1,5 +1,5 @@
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('KeyFlow extension installed');
+  // KeyFlow extension installed
 });
 
 // Listen for messages from popup or content scripts
@@ -90,26 +90,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     chrome.storage.local.get(['autoLockTimer'], (timerResult) => {
       const timerData = timerResult.autoLockTimer;
       let isVaultLocked = true;
-      
-      console.log('KeyFlow: Checking vault status, timerData:', timerData);
-      
+
       if (timerData && timerData.unlockTime) {
         const now = Date.now();
         const elapsed = (now - timerData.unlockTime) / 1000; // seconds elapsed
         const AUTO_LOCK_TIME = 5 * 60; // 5 minutes in seconds
         const remaining = AUTO_LOCK_TIME - elapsed;
-        
-        console.log('KeyFlow: Timer check - elapsed:', elapsed, 'remaining:', remaining);
-        
+
         // Vault is unlocked if time hasn't expired
         isVaultLocked = remaining <= 0;
       }
-      
-      console.log('KeyFlow: Vault locked status:', isVaultLocked);
-      
+
       if (isVaultLocked) {
         // Vault is locked, send locked response
-        console.log('KeyFlow: Sending vault locked message to content script');
         chrome.tabs.sendMessage(sender.tab.id, {
           type: 'DISPLAY_VAULT_LOCKED',
           url: currentUrl,
@@ -156,7 +149,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ success: true });
       })
       .catch((error) => {
-        console.warn('KeyFlow: Could not open popup:', error);
         sendResponse({ success: false, error: error.message });
       });
     return true;
@@ -199,7 +191,7 @@ const isMatchingDomain = (currentUrl, password) => {
       return false;
     });
   } catch (error) {
-    console.warn('KeyFlow: Domain matching error:', error);
+    // Domain matching error - return false
     return false;
   }
 };
