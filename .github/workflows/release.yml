@@ -84,19 +84,6 @@ jobs:
           echo "Chrome extension release. See repository for installation instructions." >> release_notes.md
         fi
 
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        name: KeyFlow ${{ steps.get_version.outputs.version }}
-        body_path: release_notes.md
-        files: |
-          keyflow-${{ steps.get_version.outputs.version }}.zip
-        draft: false
-        prerelease: false
-        generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Upload Chrome Web Store Package
       uses: actions/upload-artifact@v4
       with:
